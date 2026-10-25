@@ -1,4 +1,4 @@
-# phdstack
+# phstack
 
 Scaffolds Astro + Svelte + Cloudflare projects (Tailwind v4, shadcn-svelte, mode-watcher).
 
@@ -6,7 +6,7 @@ Optional modules: D1 + Drizzle, R2 (binding / presigned / public), Better Auth (
 
 ```sh
 pnpm install && pnpm build
-pnpm add -g .      # then: phdstack my-app
+pnpm add -g .      # then: phstack my-app
 # or during development:
 pnpm dev my-app         # runs via tsx
 pnpm dev my-app --skip-post   # write files only (no install / git / wrangler / shadcn)
