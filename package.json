@@ -1,0 +1,28 @@
+{
+  "name": "phdstack",
+  "version": "0.1.0",
+  "description": "Scaffold Astro + Svelte + Cloudflare projects with optional D1/Drizzle, R2 and Better Auth modules",
+  "type": "module",
+  "bin": {
+    "mkapp": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "prepare": "tsc"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.6.0"
+  }
+}
