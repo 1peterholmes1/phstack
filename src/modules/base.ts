@@ -86,10 +86,13 @@ const globalCss = String.raw`@import "tailwindcss";
 const modeToggle = String.raw`<script lang="ts">
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
-  import { resetMode, setMode } from "mode-watcher";
+  import { ModeWatcher, resetMode, setMode } from "mode-watcher";
   import { Button } from "@/lib/components/ui/button/index.js";
   import * as DropdownMenu from "@/lib/components/ui/dropdown-menu/index.js";
 </script>
+
+<!-- Lives in the same island as the toggle so both share one mode-watcher instance -->
+<ModeWatcher />
 
 <DropdownMenu.Root>
   <DropdownMenu.Trigger>
@@ -257,7 +260,6 @@ worker-configuration.d.ts
 `,
       "src/layouts/Layout.astro": `---
 import "@/styles/global.css";
-import { ModeWatcher } from "mode-watcher";
 
 interface Props {
   title?: string;
@@ -273,10 +275,18 @@ const { title = "{{name}}" } = Astro.props;
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
+    <script is:inline>
+      // Apply the saved theme before first paint (mode-watcher takes over once hydrated)
+      (function () {
+        var mode = localStorage.getItem("mode-watcher-mode") || "system";
+        var dark = mode === "dark" || (mode === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.classList.toggle("dark", dark);
+        document.documentElement.style.colorScheme = dark ? "dark" : "light";
+      })();
+    </script>
   </head>
   <body>
     <slot />
-    <ModeWatcher client:load />
   </body>
 </html>
 `,

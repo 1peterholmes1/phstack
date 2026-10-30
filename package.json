@@ -4,7 +4,7 @@
   "description": "Scaffold Astro + Svelte + Cloudflare projects with optional D1/Drizzle, R2 and Better Auth modules",
   "type": "module",
   "bin": {
-    "mkapp": "./dist/index.js"
+    "phstack": "./dist/index.js"
   },
   "files": [
     "dist"

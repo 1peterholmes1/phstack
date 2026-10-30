@@ -4,7 +4,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import * as p from "@clack/prompts";
 import type { Ctx, ModuleId, R2Access } from "./types.js";
-import { patchWrangler, scaffold } from "./scaffold.js";
+import { patchWrangler, scaffold, setCompatDate } from "./scaffold.js";
 import { run, tail } from "./utils.js";
 
 const args = process.argv.slice(2);
@@ -18,6 +18,28 @@ function bail<T>(v: T | symbol): T {
   }
   return v as T;
 }
+
+// Prints the newest compatibility date the installed workerd supports (from its version, 1.YYYYMMDD.N).
+const COMPAT_SCRIPT = `
+import { createRequire } from "node:module";
+import { existsSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+const req = createRequire(process.cwd() + "/package.json");
+const wr = createRequire(req.resolve("wrangler/package.json"));
+const mf = createRequire(wr.resolve("miniflare"));
+let dir = dirname(mf.resolve("workerd"));
+for (;;) {
+  const f = join(dir, "package.json");
+  if (existsSync(f) && JSON.parse(readFileSync(f, "utf8")).name === "workerd") {
+    const d = JSON.parse(readFileSync(f, "utf8")).version.split(".")[1];
+    console.log(d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6, 8));
+    break;
+  }
+  const up = dirname(dir);
+  if (up === dir) process.exit(1);
+  dir = up;
+}
+`;
 
 const kebab = (s: string) => (/^[a-z0-9][a-z0-9-]*$/.test(s) ? undefined : "Use lowercase letters, numbers and dashes");
 
@@ -94,7 +116,8 @@ async function main() {
     dbName,
     bucketName,
     r2Access,
-    compatDate: new Date().toISOString().slice(0, 10),
+    // Fallback only: replaced after install with the date the installed workerd actually supports.
+    compatDate: new Date(Date.now() - 14 * 86_400_000).toISOString().slice(0, 10),
     authSecret: randomBytes(32).toString("base64url"),
   };
 
@@ -121,6 +144,10 @@ async function main() {
 
     const installed = await step("Installing dependencies (pnpm)", "pnpm", ["install"]);
     if (installed) {
+      await step("Setting Worker compatibility date", "pnpm", ["exec", "node", "--input-type=module", "-e", COMPAT_SCRIPT], async (out) => {
+        const date = out.trim().match(/\d{4}-\d{2}-\d{2}$/)?.[0];
+        if (date) await setCompatDate(root, date);
+      });
       if (dbMode === "create") {
         await step("Creating D1 database", "pnpm", ["exec", "wrangler", "d1", "create", dbName], async (out) => {
           const id = out.match(/"?database_id"?\s*[:=]\s*"([^"]+)"/)?.[1];

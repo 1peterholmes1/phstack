@@ -91,3 +91,10 @@ export async function patchWrangler(root: string, fn: (cfg: any) => void) {
   fn(cfg);
   await writeFile(p, JSON.stringify(cfg, null, 2) + "\n");
 }
+
+/** Replace compatibility_date in wrangler.jsonc without disturbing comments. */
+export async function setCompatDate(root: string, date: string) {
+  const p = join(root, "wrangler.jsonc");
+  const raw = await readFile(p, "utf8");
+  await writeFile(p, raw.replace(/"compatibility_date": "[^"]*"/, `"compatibility_date": "${date}"`));
+}
